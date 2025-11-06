@@ -219,7 +219,7 @@ def create_message(mda, filename, level):
     to_send['type'] = 'HDF4'
     to_send['sensor'] = 'modis'
 
-    station = OPTIONS.get('station', 'unknown')
+    station = options.get('station', 'unknown')
     message = Message(
         '/'.join(('', str(to_send['format']),
                   str(to_send['data_processing_level']), station, 'polar'
@@ -231,9 +231,9 @@ def create_message(mda, filename, level):
 def run_aqua_gbad(obs_time, end_time=None, orbit_number=None, process_time=None, uid=None, ftype=None):
     """Run the gbad for aqua"""
 
-    working_dir = check_working_dir(OPTIONS['working_dir'])
+    working_dir = check_working_dir(options['working_dir'])
 
-    level0_home = OPTIONS['level0_home']
+    level0_home = options['level0_home']
     if (end_time and orbit_number):
         _data = {}
         _data['start_time'] = obs_time
@@ -242,13 +242,13 @@ def run_aqua_gbad(obs_time, end_time=None, orbit_number=None, process_time=None,
         _data['process_time'] = process_time
         _data['uid'] = uid
         _data['type'] = ftype
-        packetfile = os.path.join(level0_home, compose(OPTIONS['packetfile_aqua'], _data))
+        packetfile = os.path.join(level0_home, compose(options['packetfile_aqua'], _data))
     else:
         packetfile = os.path.join(level0_home,
-                                  obs_time.strftime(OPTIONS['packetfile_aqua']))
+                                  obs_time.strftime(options['packetfile_aqua']))
 
-    att_dir = OPTIONS['attitude_home']
-    eph_dir = OPTIONS['ephemeris_home']
+    att_dir = options['attitude_home']
+    eph_dir = options['ephemeris_home']
     spa_config_file = os.path.join(SPA_HOME, "smhi_configfile")
     att_file = os.path.basename(packetfile).split('.PDS')[0] + '.att'
     att_file = os.path.join(att_dir, att_file)
@@ -657,5 +657,5 @@ if __name__ == "__main__":
     cmd_args = parser.parse_args()
     setup_logging(cmd_args)
 
-    OPTIONS = get_config(cmd_args.config)
-    modis_live_runner(OPTIONS)
+    options = get_config(cmd_args.config)
+    modis_live_runner(options)
