@@ -566,12 +566,12 @@ def create_message(mda, filename, level):
     if isinstance(filename, (list, tuple, set)):
         del to_send['uri']
         del to_send['uid']
-        to_send['dataset'] = [{'uri': 'file://' + fname,
+        to_send['dataset'] = [{'uri': fname,
                                'uid': os.path.basename(fname)}
                               for fname in filename]
         mtype = 'dataset'
     else:
-        to_send['uri'] = ('file://' + filename)
+        to_send['uri'] = (filename)
         to_send['uid'] = os.path.basename(filename)
         mtype = 'file'
     to_send['format'] = 'EOS'
