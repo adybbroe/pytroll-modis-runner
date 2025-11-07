@@ -198,7 +198,7 @@ def modis_live_runner(options):
     listen_thread.stop()
 
 
-def create_message(mda, filename, level):
+def create_message(mda, filename, level, options):
     LOG.debug("mda: = " + str(mda))
     LOG.debug("type(mda): " + str(type(mda)))
     to_send = mda.copy()
@@ -228,7 +228,7 @@ def create_message(mda, filename, level):
     return message
 
 
-def run_aqua_gbad(obs_time, end_time=None, orbit_number=None, process_time=None, uid=None, ftype=None):
+def run_aqua_gbad(obs_time, end_time=None, orbit_number=None, process_time=None, uid=None, ftype=None, options=None):
     """Run the gbad for aqua"""
 
     working_dir = check_working_dir(options['working_dir'])
@@ -454,7 +454,7 @@ def run_terra_aqua_l0l1(options, scene, message, job_id, publish_q):
             shutil.move(fname_orig, mod01_file)
 
             l1a_file = retv['level1a_file']
-            pubmsg = create_message(message.data, l1a_file, "1A")
+            pubmsg = create_message(message.data, l1a_file, "1A", options)
             LOG.info("Sending: %s", pubmsg)
             publish_q.put(pubmsg)
         else:
@@ -463,7 +463,7 @@ def run_terra_aqua_l0l1(options, scene, message, job_id, publish_q):
         if mission == 'A':
             # Get ephemeris and attitude names
             attitude, ephemeris = run_aqua_gbad(obstime, end_time, orbit_number,
-                                                process_time=process_time, uid=uid, ftype=ftype)
+                                                process_time=process_time, uid=uid, ftype=ftype, options=options)
             if not attitude or not ephemeris:
                 LOG.error(
                     "Failed producing the attitude and/or the ephemeris file(s)"
@@ -612,7 +612,7 @@ def run_terra_aqua_l0l1(options, scene, message, job_id, publish_q):
             else:
                 LOG.warning("Missing file: %s", fname_orig)
 
-        pubmsg = create_message(message.data, l1b_files, '1B')
+        pubmsg = create_message(message.data, l1b_files, '1B', options)
         LOG.info("Sending: %s", pubmsg)
         publish_q.put(pubmsg)
 
