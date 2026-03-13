@@ -198,7 +198,7 @@ def modis_live_runner(options):
     listen_thread.stop()
 
 
-def create_message(mda, filename, level):
+def create_message(mda, filename, level, options):
     LOG.debug("mda: = " + str(mda))
     LOG.debug("type(mda): " + str(type(mda)))
     to_send = mda.copy()
@@ -206,12 +206,12 @@ def create_message(mda, filename, level):
         del to_send['uri']
         del to_send['uid']
         to_send['dataset'] = [{
-            'uri': 'file://' + fname,
+            'uri': fname,
             'uid': os.path.basename(fname)
         } for fname in filename]
         mtype = 'dataset'
     else:
-        to_send['uri'] = ('file://' + filename)
+        to_send['uri'] = (filename)
         to_send['uid'] = os.path.basename(filename)
         mtype = 'file'
     to_send['format'] = 'EOS'
@@ -219,7 +219,7 @@ def create_message(mda, filename, level):
     to_send['type'] = 'HDF4'
     to_send['sensor'] = 'modis'
 
-    station = OPTIONS.get('station', 'unknown')
+    station = options.get('station', 'unknown')
     message = Message(
         '/'.join(('', str(to_send['format']),
                   str(to_send['data_processing_level']), station, 'polar'
@@ -228,12 +228,12 @@ def create_message(mda, filename, level):
     return message
 
 
-def run_aqua_gbad(obs_time, end_time=None, orbit_number=None, process_time=None, uid=None, ftype=None):
+def run_aqua_gbad(obs_time, end_time=None, orbit_number=None, process_time=None, uid=None, ftype=None, options=None):
     """Run the gbad for aqua"""
 
-    working_dir = check_working_dir(OPTIONS['working_dir'])
+    working_dir = check_working_dir(options['working_dir'])
 
-    level0_home = OPTIONS['level0_home']
+    level0_home = options['level0_home']
     if (end_time and orbit_number):
         _data = {}
         _data['start_time'] = obs_time
@@ -242,13 +242,13 @@ def run_aqua_gbad(obs_time, end_time=None, orbit_number=None, process_time=None,
         _data['process_time'] = process_time
         _data['uid'] = uid
         _data['type'] = ftype
-        packetfile = os.path.join(level0_home, compose(OPTIONS['packetfile_aqua'], _data))
+        packetfile = os.path.join(level0_home, compose(options['packetfile_aqua'], _data))
     else:
         packetfile = os.path.join(level0_home,
-                                  obs_time.strftime(OPTIONS['packetfile_aqua']))
+                                  obs_time.strftime(options['packetfile_aqua']))
 
-    att_dir = OPTIONS['attitude_home']
-    eph_dir = OPTIONS['ephemeris_home']
+    att_dir = options['attitude_home']
+    eph_dir = options['ephemeris_home']
     spa_config_file = os.path.join(SPA_HOME, "smhi_configfile")
     att_file = os.path.basename(packetfile).split('.PDS')[0] + '.att'
     att_file = os.path.join(att_dir, att_file)
@@ -454,7 +454,7 @@ def run_terra_aqua_l0l1(options, scene, message, job_id, publish_q):
             shutil.move(fname_orig, mod01_file)
 
             l1a_file = retv['level1a_file']
-            pubmsg = create_message(message.data, l1a_file, "1A")
+            pubmsg = create_message(message.data, l1a_file, "1A", options)
             LOG.info("Sending: %s", pubmsg)
             publish_q.put(pubmsg)
         else:
@@ -463,7 +463,7 @@ def run_terra_aqua_l0l1(options, scene, message, job_id, publish_q):
         if mission == 'A':
             # Get ephemeris and attitude names
             attitude, ephemeris = run_aqua_gbad(obstime, end_time, orbit_number,
-                                                process_time=process_time, uid=uid, ftype=ftype)
+                                                process_time=process_time, uid=uid, ftype=ftype, options=options)
             if not attitude or not ephemeris:
                 LOG.error(
                     "Failed producing the attitude and/or the ephemeris file(s)"
@@ -612,7 +612,7 @@ def run_terra_aqua_l0l1(options, scene, message, job_id, publish_q):
             else:
                 LOG.warning("Missing file: %s", fname_orig)
 
-        pubmsg = create_message(message.data, l1b_files, '1B')
+        pubmsg = create_message(message.data, l1b_files, '1B', options)
         LOG.info("Sending: %s", pubmsg)
         publish_q.put(pubmsg)
 
@@ -657,5 +657,5 @@ if __name__ == "__main__":
     cmd_args = parser.parse_args()
     setup_logging(cmd_args)
 
-    OPTIONS = get_config(cmd_args.config)
-    modis_live_runner(OPTIONS)
+    options = get_config(cmd_args.config)
+    modis_live_runner(options)
